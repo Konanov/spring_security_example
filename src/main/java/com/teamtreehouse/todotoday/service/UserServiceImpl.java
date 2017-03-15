@@ -10,22 +10,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
-    private UserDao userDao;
+    private UserDao dao;
 
     @Override
     public User findByUsername(String username) {
-        return userDao.findByUsername(username);
+        return dao.findByUsername(username);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Load user from the database (throw exception if not found)
-        User user = userDao.findByUsername(username);
-        if(user == null) {
+        //Load user from database (throw exception if not found)
+        User user = dao.findByUsername(username);
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
-
-        // Return user object
+        //Return user object
         return user;
     }
 }

@@ -32,6 +32,10 @@ dependencies {
 	compile 'org.apache.tomcat:tomcat-dbcp:8.0.30'
 	compile 'org.springframework.boot:spring-boot-starter-security'
 	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4:2.1.2.RELEASE'
+	// https://mvnrepository.com/artifact/org.springframework.security/spring-security-data
+	//THIS DEPENDENCY FIXES PRINCIPAL PROBLEM IN spEL
+	/*compile group: 'org.springframework.security', name: 'spring-security-data', version: '4.2.1.RELEASE'*/
+
 
 	runtime 'com.h2database:h2'
     runtime 'javax.transaction:jta:1.1'

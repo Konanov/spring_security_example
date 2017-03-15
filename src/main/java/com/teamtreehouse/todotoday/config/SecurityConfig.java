@@ -4,6 +4,7 @@ import com.teamtreehouse.todotoday.service.UserService;
 import com.teamtreehouse.todotoday.web.FlashMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.repository.query.spi.EvaluationContextExtension;
 import org.springframework.data.repository.query.spi.EvaluationContextExtensionSupport;
@@ -20,57 +21,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+
 @Configuration
 @EnableWebSecurity
+@ComponentScan("com.teamtreehouse")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired
-    private UserService userService;
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
-    }
+    private UserService userService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/assets/**");
-    }
+    /*Fixes spEL principal problem*/
+    /*@Bean
+    public SecurityEvaluationContextExtension securityEvaluationContextExtension() {
+        return new SecurityEvaluationContextExtension();
+    }*/
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-            .authorizeRequests()
-                .anyRequest().hasRole("USER")
-                .and()
-            .formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .successHandler(loginSuccessHandler())
-                .failureHandler(loginFailureHandler())
-                .and()
-            .logout()
-                .permitAll()
-                .logoutSuccessUrl("/login")
-                .and()
-            .csrf();
-    }
-
-    public AuthenticationSuccessHandler loginSuccessHandler() {
-        return (request, response, authentication) -> response.sendRedirect("/");
-    }
-
-    public AuthenticationFailureHandler loginFailureHandler() {
-        return (request, response, exception) -> {
-            request.getSession().setAttribute("flash", new FlashMessage("Incorrect username and/or password. Please try again.", FlashMessage.Status.FAILURE));
-            response.sendRedirect("/login");
-        };
-    }
-
+    /*Fixes spEL principal problem as well*/
     @Bean
     public EvaluationContextExtension securityExtension() {
         return new EvaluationContextExtensionSupport() {
@@ -82,8 +53,43 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public Object getRootObject() {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                return new SecurityExpressionRoot(authentication) {};
+                return new SecurityExpressionRoot(authentication) {
+                };
             }
         };
+    }
+
+    @Autowired
+    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/assets/**");
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .anyRequest().hasRole("USER")
+                .and()
+                .formLogin().loginPage("/login").permitAll()
+                .successHandler(loginSuccessHandler())
+                .failureHandler(loginFailureHandler())
+                .and()
+                .logout().permitAll().logoutSuccessUrl("/login")
+                .and().csrf();
+    }
+
+    public AuthenticationSuccessHandler loginSuccessHandler() {
+        return ((request, response, authentication) -> response.sendRedirect("/"));
+    }
+
+    public AuthenticationFailureHandler loginFailureHandler() {
+        return ((request, response, exception) -> {
+            request.getSession().setAttribute("flash", new FlashMessage("Invalid username and/or password. Try again.", FlashMessage.Status.FAILURE));
+            response.sendRedirect("/login");
+        });
     }
 }

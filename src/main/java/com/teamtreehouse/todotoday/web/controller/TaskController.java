@@ -40,7 +40,7 @@ public class TaskController {
 
     @RequestMapping(path = "/tasks", method = RequestMethod.POST)
     public String addTask(@ModelAttribute Task task, Principal principal) {
-        User user = (User)((UsernamePasswordAuthenticationToken)principal).getPrincipal();
+        User user = (User)((UsernamePasswordAuthenticationToken) principal).getPrincipal();
         task.setUser(user);
         taskService.save(task);
         return "redirect:/";
